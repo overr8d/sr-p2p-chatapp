@@ -21,8 +21,30 @@ function onMessage(ws, message){
 
 function onInit(ws, id){
     console.log("init from peer:", id);
+    var isFirstUser;
     ws.id = id;
+    if(Object.keys(connectedPeers).length === 0){
+        isFirstUser = true;
+    } else {
+        isFirstUser = false;
+    }
     connectedPeers[id] = ws;
+    // For test purposes
+    ws.send(JSON.stringify({
+        type: 'welcome',
+        isFirstUser: isFirstUser,
+        onlineUsers: Object.keys(connectedPeers),
+        source: 'server',
+    }));
+
+    for (key in connectedPeers){
+        connectedPeers[key].send(JSON.stringify({
+            type: 'onlineUsers',
+            onlineUsers: Object.keys(connectedPeers),
+            source: 'server',
+        }));
+    }
+    //console.log(Object.keys(connectedPeers));
 }
 
 function onOffer(offer, destination, source){

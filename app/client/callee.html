@@ -3,27 +3,45 @@
 <head>
     <meta charset="utf-8" />
     <title>Callee page</title>
+     <style type="text/css">
+        #chat {
+            height: 500px;
+            font-style: italic;
+            color: grey;
+        }
+        #chatWrap {
+            float: left;
+            border: 1px #000 solid;
+        }
+      
+    </style>
     <script src="signalingChannelFactory.js"></script>
     <script src="callee.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script language="javascript" type="text/javascript">
-        var CALLEE_ID = 2;
-        window.addEventListener("load", function(){
-            var received = document.getElementById('received')
-            initCallee(function(message){
-                var newText = document.createTextNode(message);
-                received.appendChild(newText);
+        $(document).ready(function(){
+            init();
+            var $messageForm = $('#send-message');
+            var $messageBox = $('#message');
+            $messageForm.submit(function(e){
+              	e.preventDefault();
+              	channel.send($messageBox.val());
+              	$messageBox.val('');
             });
-            document.getElementById("send").onclick= function(){
-                var message = document.getElementById('message').value;
-                channel.send(message);
-            };
-        }, false);
+        });
     </script>
 </head>
 <body>
-    <h2>Callee page</h2>
-    <textarea id="message"></textarea>
-    <p id="received"></p>
-    <button id="send">Send message</button>
+    <div id="contentWrap">
+            <div id="chatWrap">
+                <div id="chat"></div>
+                <form id="send-message">
+                    <input size="35" id="message"></input>
+                    <input type="submit" value="Send"></input>
+                </form>
+            </div>
+            <div id="title">Online Users</div>
+            <div id="users"></div>
+    </div>
 </body>
 </html>

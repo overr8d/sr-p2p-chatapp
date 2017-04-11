@@ -36,6 +36,12 @@ function SignalingChannel(id){
             case "answer":
                 self.onAnswer(objMessage.answer, objMessage.source);
                 break;
+            case "welcome":
+                self.onWelcome(objMessage.isFirstUser, objMessage.onlineUsers, objMessage.source);
+                break;
+            case "onlineUsers":
+                self.onOnlineUsers(objMessage.onlineUsers, objMessage.source);
+                break;
             default:
                 throw new Error("invalid message type");
         }
@@ -81,6 +87,16 @@ function SignalingChannel(id){
     this.onICECandidate = function(ICECandidate, source){
         console.log("ICECandidate from peer:", source, ':', ICECandidate);
     };
+
+    // default handler, should be overriden
+    this.onWelcome = function(isFirstUser, onlineUsers, source){
+        console.log('This user is first user in the app?', isFirstUser, 'reported by ', source);
+    }
+    // default handler, should be overriden
+    this.onOnlineUsers = function(onlineUsers, source){
+        console.log(onlineUsers.length, ' users are online, reported by ', source);
+    }
+
 }
 
 window.createSignalingChannel = function(url, id){
