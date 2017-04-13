@@ -95,10 +95,9 @@ When init() function is fired on page load:
 In this assignment, mesh network topology has been implemented to provide P2P mechanism. Per this scenario, the system does not require a messaging server that relays each message to clients. Instead, each client creates RTCDataChannels to other clients, thus sending direct messages without any hassle. Compared to MCU topology, Mesh ends up creating more connections and requiring higher bandwidth but eliminates excess server costs. 
 
 - [x] **What are the problems of this architecture?**
-This application uses many RTCPeerConnections to create P2P connections between each peer. This paradigm ends up consuming more network traffic and local resources like CPU and memory. Also when the number of RTCPeerConnections get larger, some browser specific problems may arise, resulting in application crash. 
+* This application uses many RTCPeerConnections to create P2P connections between each peer. This paradigm ends up consuming more network traffic and local resources like CPU and memory. Also when the number of RTCPeerConnections get larger, some browser specific problems may arise, resulting in application crash. 
 - [x] **Describe an architecture that could solve those problems.**
-One approach to solve above-mentioned problems might be utilizing shared RTCPeerConnection that a peer use to create multi RTCDataChannels on. This may result in consuming less network traffic and local resources. This might also eliminate the restriction incurred by having many RTCPeerConnections. 
-
+* One approach to solve above-mentioned problems might be utilizing shared RTCPeerConnection that a peer use to create multi RTCDataChannels on. This may result in consuming less network traffic and local resources. This might also eliminate the restriction incurred by having many RTCPeerConnections. 
 
 ## Prerequisites:
 
