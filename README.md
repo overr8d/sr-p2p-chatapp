@@ -58,6 +58,9 @@ When init() function is fired on page load:
 
 * Each peer creates its own unique ID, "peers" object that holds the online peers list, "pcs" object that holds RTCPeerConnections to be created, and "channels" object that holds RTCDataChannels to be created. 
 * Each peer also creates its signalling channel to server, sets "onWelcome" and "onOnlinePeers" listeners respectively. 
+
+(`app/client/client.js`)
+
 ```javascript
     this.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription;
     this.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
@@ -86,6 +89,9 @@ When init() function is fired on page load:
 ```
 
 * Once "onWelcomeHandler" is invoked, first "getPeers" function is fired, populating "peers" object with currently online peers, then "connect" function is invoked. "onOnlinePeersHandler", however, invokes "displayPeers" function, each time a new peer connects to server, displaying currrently online peers on HTML page.
+
+(`app/client/client.js`)
+
 ```javascript
 
     function getPeers(onlinePeers) {
@@ -112,6 +118,9 @@ When init() function is fired on page load:
  
 * When "connect" function is fired, depending on the boolean value of "isFirstPeer", the peer either acts as caller - first creates RTCPeerConnections, sends offer by calling "connect2Peer" function and sets "onAnswer" eventListener - or callee - sets "onOffer" listeners and handles the incoming offers - which allows the same client code treating both callee and caller differently. Once an offer is sent, caller sets the same eventListeners as the callee did and wait for an answer. This logic enables each peer (excluding first peer) to start creating RTCPeerConnections to preceding peers first and then setting eventListeners as callee did previously. 
 * "connect2Peer" function first creates RTCPeerConnection to given peer Id, initiates corresponding RTCDataChannel, creates offer and sends it to respective peer.
+
+(`app/client/client.js`)
+
 ```javascript
 
     function connect(isFirstPeer){
@@ -155,6 +164,9 @@ When init() function is fired on page load:
 
 * Once offer received, the peer acting as callee creates RTCPeerConnection, assigns it to given peer Id, sets corresponding "ondatachannel" listener and sends an aswer to respective peer. In the meantime, ICECandidates are generated and exchanged.
 * RTCDataChannels are created by firing "initDataChannel" function. Similar to "isFirstPeer" logic, a boolean value is utilized to distinguish between a peer that creates RTCDataChannels, and a peer that listens to "ondatachannel" event. In this case,the peer acting as caller sets invokes "initDataChannel" function with a boolean value "true", and the other peer invokes with "false". Next, "setupChat" function is invoked by both parties to set up RTCDataChannels' eventListeners on given channel. 
+
+(`app/client/client.js`)
+
 ```javascript
 
     function initDataChannel(isInitiator, peerId) {
@@ -197,6 +209,9 @@ When init() function is fired on page load:
 ```
 
 * MessageHandler function is fired when either peer clicks "send" button on the HTML, simply extracting properties from message text and sending it to corresponding peer.  
+
+(`app/client/client.js`)
+
 ```javascript
 
     function messageHandler(message, callback){
