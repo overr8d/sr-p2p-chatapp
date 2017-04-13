@@ -9,14 +9,30 @@ var WsMock = function(){
 describe('signalingServer', function() {
     describe('Initialization', function() {
         it('onInit', function() {
-            var ws = new WsMock();
-            var message = {
+           
+            var ws1 = new WsMock();
+            var ws2 = new WsMock();
+            var message1 = {
                 type:"init",
                 init:1
             };
-            messageHandler(ws, message);
-            ws.id.should.be.equal(1);
-            messageHandler._connectedPeers[1].should.be.equal(ws);
+            var message2 = {
+                type:"init",
+                init:2
+            };
+            messageHandler(ws1, message1);
+            ws1.id.should.be.equal(1);
+            messageHandler._isFirstPeer.should.be.true;
+            messageHandler._connectedPeers[1].should.be.equal(ws1);
+            var spy = sinon.spy(messageHandler._connectedPeers[1], "send");
+            spy.calledTwice.should.be.true;
+
+            messageHandler(ws2, message2);
+            ws2.id.should.be.equal(2);
+            messageHandler._isFirstPeer.should.be.false;
+            messageHandler._connectedPeers[2].should.be.equal(ws2);
+            spy = sinon.spy(messageHandler._connectedPeers[2], "send");
+            spy.calledTwice.should.be.true;
         });
     });
     describe('Messages', function() {

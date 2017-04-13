@@ -1,14 +1,14 @@
 {
-  "name": "streamroot-test-recrutement",
+  "name": "webrtc_p2p_app",
   "version": "0.0.1",
-  "description": "Streamroot's test for applicant developpers",
+  "description": "Streamroot's test for application developers",
   "main": "index.js",
   "scripts": {
     "test": "node_modules/mocha/bin/mocha",
     "styleCheck": "./node_modules/jshint/bin/jshint app/ && ./node_modules/echint/bin/echint -v && echo 'Style check OK'",
     "start":"(node app/server/signalingServer.js &) && ./node_modules/http-server/bin/http-server -p 8089"
   },
-  "author": "StyMaar",
+  "author": "overr8d",
   "license": "GPL",
   "dependencies": {
     "ws": "^0.8.0"

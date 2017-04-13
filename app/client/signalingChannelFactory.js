@@ -37,10 +37,10 @@ function SignalingChannel(id){
                 self.onAnswer(objMessage.answer, objMessage.source);
                 break;
             case "welcome":
-                self.onWelcome(objMessage.isFirstUser, objMessage.onlineUsers, objMessage.source);
+                self.onWelcome(objMessage.isFirstPeer, objMessage.onlinePeers, objMessage.source);
                 break;
-            case "onlineUsers":
-                self.onOnlineUsers(objMessage.onlineUsers, objMessage.source);
+            case "onlinePeers":
+                self.onOnlinePeers(objMessage.onlinePeers, objMessage.source);
                 break;
             default:
                 throw new Error("invalid message type");
@@ -89,12 +89,12 @@ function SignalingChannel(id){
     };
 
     // default handler, should be overriden
-    this.onWelcome = function(isFirstUser, onlineUsers, source){
-        console.log('This user is first user in the app?', isFirstUser, 'reported by ', source);
+    this.onWelcome = function(isFirstPeer, onlinePeers, source){
+        console.log('This peer is first peer in the app?', isFirstPeer, 'reported by ', source);
     }
     // default handler, should be overriden
-    this.onOnlineUsers = function(onlineUsers, source){
-        console.log(onlineUsers.length, ' users are online, reported by ', source);
+    this.onOnlinePeers = function(onlinePeers, source){
+        console.log(onlinePeers.length, ' peers are online, reported by ', source);
     }
 
 }
