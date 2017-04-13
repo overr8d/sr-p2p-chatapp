@@ -58,14 +58,170 @@ When init() function is fired on page load:
 
 * Each peer creates its own unique ID, "peers" object that holds the online peers list, "pcs" object that holds RTCPeerConnections to be created, and "channels" object that holds RTCDataChannels to be created. 
 * Each peer also creates its signalling channel to server, sets "onWelcome" and "onOnlinePeers" listeners respectively. 
+```javascript
+    this.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription;
+    this.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+    this.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate;
+    // Holds online peers
+    this.peers = {};
+    // Holds created RTCPeerConnections
+    this.pcs = {};
+    // Holds created DataChannels 
+    this.channels = {};
+    // Determines if the peer is caller or callee
+    this.isFirstPeer = false;
+    this.wsUri = "ws://localhost:8090/";
+    // Generates random peerID
+    this.myID =  Math.round(Math.random() * 5000000000) + 1;
+    this.signalingChannel = createSignalingChannel(this.wsUri, this.myID);
+    this.servers = { iceServers: [{urls: "stun:stun.1.google.com:19302"}] };
+    // Displays peerID on DOM
+    document.getElementById("myId").innerHTML = "My ID: "+ this.myID;
+
+    // Receives welcome message from server
+    this.signalingChannel.onWelcome = onWelcomeHandler;
+
+    // Receives peer list from server each time new peer connects
+    this.signalingChannel.onOnlinePeers = onOnlinePeersHandler;
+```
+
 * Once "onWelcomeHandler" is invoked, first "getPeers" function is fired, populating "peers" object with currently online peers, then "connect" function is invoked. "onOnlinePeersHandler", however, invokes "displayPeers" function, each time a new peer connects to server, displaying currrently online peers on HTML page.
+```javascript
+
+    function getPeers(onlinePeers) {
+        if(Object.keys(self.peers).length !== 0) {
+             self.peers = {};
+        }
+        for (key in onlinePeers){
+            if (onlinePeers[key] != self.myID){
+                self.peers[key] = onlinePeers[key];
+            }
+        }
+    }
+    this.getPeers = getPeers;
+
+    function displayPeers(peers){
+        var peerList='';
+        for (key in peers){
+            peerList += peers[key] + '<br/>';
+        }
+        document.getElementById('peers').innerHTML = peerList;
+    }
+    this.displayPeers = displayPeers;
+ ```
+ 
 * When "connect" function is fired, depending on the boolean value of "isFirstPeer", the peer either acts as caller - first creates RTCPeerConnections, sends offer by calling "connect2Peer" function and sets "onAnswer" eventListener - or callee - sets "onOffer" listeners and handles the incoming offers - which allows the same client code treating both callee and caller differently. Once an offer is sent, caller sets the same eventListeners as the callee did and wait for an answer. This logic enables each peer (excluding first peer) to start creating RTCPeerConnections to preceding peers first and then setting eventListeners as callee did previously. 
 * "connect2Peer" function first creates RTCPeerConnection to given peer Id, initiates corresponding RTCDataChannel, creates offer and sends it to respective peer.
+```javascript
+
+    function connect(isFirstPeer){
+    	if(!isFirstPeer){
+    		for (key in self.peers){
+    			self.connect2Peer(self.peers[key]);
+    		}
+    		self.signalingChannel.onAnswer = onAnswerHandler;
+    	}
+    	self.signalingChannel.onOffer = onOfferHandler;
+        self.signalingChannel.onICECandidate = onICECandidateHandler;
+    }
+    this.connect = connect;
+    
+    function connect2Peer(peerId){
+        self.pcs[peerId] = new RTCPeerConnection(self.servers, {
+            optional: [{
+                DtlsSrtpKeyAgreement: true
+            }]
+        });
+
+        self.initDataChannel(true, peerId);
+
+        self.pcs[peerId].onicecandidate = function (evt) {
+            // empty candidate (wirth evt.candidate === null) are often generated
+            if(evt.candidate){ 
+                self.signalingChannel.sendICECandidate(evt.candidate, peerId); 
+            }
+        };
+
+        self.pcs[peerId].createOffer(function(offer){
+            self.pcs[peerId].setLocalDescription(offer);
+            console.log("sending offer...");
+            self.signalingChannel.sendOffer(offer, peerId);
+            }, function (e){
+                console.error(e);
+        });
+    }
+    this.connect2Peer = connect2Peer;
+```
+
 * Once offer received, the peer acting as callee creates RTCPeerConnection, assigns it to given peer Id, sets corresponding "ondatachannel" listener and sends an aswer to respective peer. In the meantime, ICECandidates are generated and exchanged.
 * RTCDataChannels are created by firing "initDataChannel" function. Similar to "isFirstPeer" logic, a boolean value is utilized to distinguish between a peer that creates RTCDataChannels, and a peer that listens to "ondatachannel" event. In this case,the peer acting as caller sets invokes "initDataChannel" function with a boolean value "true", and the other peer invokes with "false". Next, "setupChat" function is invoked by both parties to set up RTCDataChannels' eventListeners on given channel. 
+```javascript
+
+    function initDataChannel(isInitiator, peerId) {
+        if (isInitiator) {
+            var dataChannel = self.pcs[peerId].createDataChannel("datachannel: " + peerId, { reliable: false });
+            console.log("data channel created for",peerId);
+            self.channels[peerId] = dataChannel;
+            self.setupChat(dataChannel);
+        } else {
+		    self.pcs[peerId].ondatachannel = function(e) {
+                console.log("channel received from",peerId);
+			    self.channels[peerId] = e.channel;
+			    self.setupChat(e.channel);
+		    };
+        }
+	}
+    this.initDataChannel = initDataChannel;
+
+    function setupChat(channel){
+        channel.onclose = function(evt) {
+            console.log("dataChannel closed.");
+        };
+
+        channel.onerror = function(evt) {
+            console.error("dataChannel error!");
+        };
+
+        channel.onopen = function(){
+            console.log("dataChannel opened.");
+        };
+
+        channel.onmessage = function(message){
+            console.log("private message received.");
+            var chat = document.getElementById("chat");
+            var msg = message.data  + "</br>";
+            chat.innerHTML += msg;
+        };
+    }
+    this.setupChat = setupChat;
+```
+
 * MessageHandler function is fired when either peer clicks "send" button on the HTML, simply extracting properties from message text and sending it to corresponding peer.  
+```javascript
 
-
+    function messageHandler(message, callback){
+        var msg = message && message.trim();
+        if(msg && msg.substr(0,2) === '> '){
+            msg = msg.substr(2);
+            var ind = msg.indexOf(' ');
+            if(ind !== -1){
+                var peerId = msg.substr(0,ind);
+                 if(Object.values(self.peers).includes(peerId)){
+                    var _msg = msg.substr(ind + 1);
+                    console.log("sending private message...");
+                    self.channels[peerId].send(_msg);
+                 } else {
+                    callback("Error! Enter a valid peer ID");
+                 }
+            } else { 
+                callback("Error! A white space missing before message");  
+            }
+        } else {  
+            callback("Error! Follow the given message format");     
+        }
+    }
+    this.messageHandler = messageHandler;
+```
 ## How to launch the app
 
 * Run `npm install` to install dependencies. 
