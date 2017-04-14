@@ -270,6 +270,7 @@ In this assignment, mesh network topology has been implemented to provide P2P me
 - [x] **Describe an architecture that could solve those problems.**
 * One approach to solve above-mentioned problems might be utilizing shared RTCPeerConnection that a peer use to create multi RTCDataChannels on. This may result in consuming less network traffic and local resources. This might also eliminate the restriction incurred by having many RTCPeerConnections. 
 
+Side note #2: I just realized that "onlineUsers" message sent from the server is making the app less server-independent. Instead, each time "onOfferHandler" is triggered on client side, "peers" object can be updated and "displayUsers" function can be invoked. Those would be reflected on next iterations.
 ## Prerequisites:
 
 * Node.js v4.2 or later
